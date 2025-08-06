@@ -1,0 +1,37 @@
+name: Generate AsyncAPI Docs
+
+on:
+  push:
+    paths:
+      - 'asyncapi.yaml'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install AsyncAPI Generator
+        run: npm install -g @asyncapi/generator
+
+      - name: Generate HTML docs
+        run: |
+          npx @asyncapi/generator asyncapi.yaml @asyncapi/html-template -o docs
+          touch docs/.nojekyll
+
+      - name: Commit and push generated docs
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add docs
+          git commit -m "🤖 Update generated docs" || echo "No changes to commit"
+          git push
