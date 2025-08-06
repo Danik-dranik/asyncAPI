@@ -2,17 +2,15 @@ name: Generate AsyncAPI Docs
 
 on:
   push:
-    paths:
-      - 'asyncapi.yaml'
+    branches:
+      - main  # или 'master', если используешь его
 
 jobs:
-  generate:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
 
       - name: Set up Node.js
@@ -20,18 +18,14 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install AsyncAPI Generator
+      - name: Install AsyncAPI generator
         run: npm install -g @asyncapi/generator
 
       - name: Generate HTML docs
-        run: |
-          npx @asyncapi/generator asyncapi.yaml @asyncapi/html-template -o docs
-          touch docs/.nojekyll
+        run: ag asyncapi.yaml @asyncapi/html-template -o docs
 
-      - name: Commit and push generated docs
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add docs
-          git commit -m "🤖 Update generated docs" || echo "No changes to commit"
-          git push
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
